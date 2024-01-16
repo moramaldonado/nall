@@ -1,0 +1,17 @@
+phase,sentence,target_picture,foil_picture,expected_answer,meaning,trial_type,ET,target_object,foil_object
+testing,blueness,bluehouse_bluehouse(twice?),NA,ALL,All,not_extrapolation,E,househouse,NA
+testing,blueness,bluehouse_bluehouse,NA,ALL,All,not_extrapolation,E,househouse,NA
+testing,blueness,greentree_greentree,NA,NONE,None,not_extrapolation,E,treetree,NA
+testing,blueness,redcar_redcar,NA,NONE,None,not_extrapolation,E,carcar,NA
+testing,blueness,bluehouse_greentree,NA,?,Some/NAll,extrapolation,E,housetree,NA
+testing,blueness,bluehouse_redcar,NA,?,Some/NAll,extrapolation,E,housecar,NA
+testing,redness,redcar_redcar,NA,ALL,All,not_extrapolation,E,carcar,NA
+testing,redness,redcar_redcar,NA,ALL,All,not_extrapolation,E,carcar,NA
+testing,redness,bluehouse_bluehouse,NA,NONE,None,not_extrapolation,E,househouse,NA
+testing,redness,greentree_greentree,NA,NONE,None,not_extrapolation,E,treetree,NA
+testing,redness,redcar_bluehouse,NA,?,Some/NAll,extrapolation,E,carhouse,NA
+testing,redness,redcar_greentree,NA,?,Some/NAll,extrapolation,E,cartree,NA
+training,greenness,bluecastle_bluecastle,greenbicycle_greenbicycle,NONE,None,not_extrapolation,T,castlecastle,bicyclebicycle
+training,greenness,greenbicycle_greenbicycle,bluecastle_bluecastle,ALL,All,not_extrapolation,T,bicyclebicycle,castlecastle
+training,greenness,redflower_redflower,greenbicycle_greenbicycle,NONE,None,not_extrapolation,T,flowerflower,bicyclebicycle
+training,greenness,greenbicycle_greenbicycle,redflower_redflower,ALL,All,not_extrapolation,T,bicyclebicycle,flowerflower
