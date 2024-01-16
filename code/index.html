@@ -114,7 +114,7 @@ var train_phase = {
             var html = `<p>${jsPsych.timelineVariable('sentence')}</p>`;
             return html},
         choices: function() {return jsPsych.randomization.shuffle(['img/'+jsPsych.timelineVariable('target_picture')+'.png', 'img/'+jsPsych.timelineVariable('foil_picture')+'.png']);},
-        button_html: '<button class="jspsych-btn"><img src="%choice%" style="width:200px;"/></button>',
+        button_html: '<button class="jspsych-btn"><img src="%choice%" style="width:200px; height:400px"/></button>',
         post_trial_grap: 300, 
         save_trial_parameters: {
             // save the randomly-selected button order 
