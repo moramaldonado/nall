@@ -10,7 +10,7 @@
     <script src="https://unpkg.com/@jspsych/plugin-preload@1.1.2"></script>
     <script src="https://unpkg.com/@jspsych/plugin-html-button-response@1.1.3"></script> 
     <script src="https://unpkg.com/@jspsych/plugin-image-button-response@1.1.2"></script>
-    <link href="https://unpkg.com/jspsych@7.3.3/css/jspsych.css" rel="stylesheet" type="text/css" />
+    <link href="style.css" rel="stylesheet" type="text/css" />
   </head>
   <body></body>
   <script>
@@ -115,8 +115,9 @@ var train_phase = {
             var html = `<p>The ${jsPsych.timelineVariable('sentence')} is <b>${jsPsych.timelineVariable('expected_answer')}</b></p>`;
             return html},
         choices: function() {return jsPsych.randomization.shuffle(['img/'+jsPsych.timelineVariable('target_picture')+'.png', 'img/'+jsPsych.timelineVariable('foil_picture')+'.png']);},
-        button_html: '<button class="jspsych-btn"><img src="%choice%" style="width:200px; height:150px"/></button>',
+        button_html: '<button class="jspsych-btn"><img src="%choice%" style="width:200px; height:100px"/></button>',
         post_trial_grap: 300, 
+        prompt : '  <p class="invisible-paragraph">feedback</p>',
         save_trial_parameters: {
             // save the randomly-selected button order 
             choices: true,
@@ -135,17 +136,33 @@ var train_phase = {
          on_finish: function(data){
             data.img_response = data.choices[data.response]
             // Score the keyboard response as correct or incorrect.
-             if(data.img_response == jsPsych.timelineVariable('target_picture')){
+             if(data.img_response == 'img/'+jsPsych.timelineVariable('target_picture')+'.png'){
                 data.correct = true;
+                data.feedback = '<p style=\"color:green\">Correct!</p>';
+
             } else {
                 data.correct = false; 
+                data.feedback = '<p style=\"color:red\">Incorrect!</p>';
             }
             console.log(data.correct)
-  }
-    }],  
+  }}, 
+    {type: jsPsychHtmlButtonResponse,
+     stimulus: function(){
+            var html = `<p>The ${jsPsych.timelineVariable('sentence')} is <b>${jsPsych.timelineVariable('expected_answer')}</b></p>`;
+            return html},
+      button_html: '<button class="jspsych-btn" disabled="true"><img src="%choice%" style="width:200px; height:100px"/></button>', // Disable the buttons
+      choices: function () {const choices = jsPsych.data.getLastTrialData().values()[0].choices; return choices},
+      prompt: function () {const feedback = jsPsych.data.getLastTrialData().values()[0].feedback; return feedback},
+      trial_duration: 3000, 
+      post_trial_gap: 500,
+      save_trial_parameters: {
+            // don't save the stimulus
+            stimulus: false
+          }},
+          ],  
       timeline_variables:training_trials,
       randomize_order: true} ;
-    //timeline.push(train_phase);
+    timeline.push(train_phase);
 
 
     var test_phase = {
