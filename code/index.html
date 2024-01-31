@@ -60,10 +60,11 @@
 
     //replace all the instances of 'ALL' per the word you choose for word_ALL
     replaceValuesForKeys(testing_trials, ['expected_answer'], 'ALL', word_ALL);
-    
+    replaceValuesForKeys(training_trials, ['expected_answer'], 'ALL', word_ALL);
+
     //replace all the instances of 'NONE' per the word you choose for word_NONE
     replaceValuesForKeys(testing_trials, ['expected_answer'], 'NONE', word_NONE);
-
+    replaceValuesForKeys(training_trials, ['expected_answer'], 'NONE', word_NONE);
 
     // capture info from Prolific
     var prolific_id = jsPsych.data.getURLVariable('PROLIFIC_PID');
@@ -111,10 +112,10 @@ var train_phase = {
       {
         type: jsPsychHtmlButtonResponse,
         stimulus: function(){
-            var html = `<p>${jsPsych.timelineVariable('sentence')}</p>`;
+            var html = `<p>The ${jsPsych.timelineVariable('sentence')} is <b>${jsPsych.timelineVariable('expected_answer')}</b></p>`;
             return html},
         choices: function() {return jsPsych.randomization.shuffle(['img/'+jsPsych.timelineVariable('target_picture')+'.png', 'img/'+jsPsych.timelineVariable('foil_picture')+'.png']);},
-        button_html: '<button class="jspsych-btn"><img src="%choice%" style="width:200px; height:400px"/></button>',
+        button_html: '<button class="jspsych-btn"><img src="%choice%" style="width:200px; height:150px"/></button>',
         post_trial_grap: 300, 
         save_trial_parameters: {
             // save the randomly-selected button order 
@@ -144,7 +145,7 @@ var train_phase = {
     }],  
       timeline_variables:training_trials,
       randomize_order: true} ;
-    timeline.push(train_phase);
+    //timeline.push(train_phase);
 
 
     var test_phase = {
@@ -160,8 +161,8 @@ var train_phase = {
       type: jsPsychHtmlButtonResponse,
       stimulus: function(){
         var html = `
-            <img src="img/${jsPsych.timelineVariable('target_picture')}.png">
-            <p>${jsPsych.timelineVariable('sentence')}</p>`;
+            <img style="width:350px; height:150px; border:1px solid black; border-radius: 15px;" src="img/${jsPsych.timelineVariable('target_picture')}.png">
+            <p>The ${jsPsych.timelineVariable('sentence')} is _______ </p>`;
         return html;
       },
       prompt : '',
