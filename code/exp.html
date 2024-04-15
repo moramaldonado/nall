@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Learning experiment</title>
+    <script src="functions.js"></script>
+    <script src="trials.js"></script>
+    <script src="save_data.js"></script>
+    <script src="https://unpkg.com/jspsych@7.3.4"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@1.1.2"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-image-keyboard-response@1.1.2"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-preload@1.1.2"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-html-button-response@1.1.3"></script> 
+    <script src="https://unpkg.com/@jspsych/plugin-image-button-response@1.1.2"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-survey-text@1.1.3"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-external-html@1.1.3"></script>
+
+
+    <link href="style.css" rel="stylesheet" type="text/css" />
+  </head>
+  <body></body>
+  <script>
+
+
+  var subject_id;
+
+//save in server
+    const jsPsych = initJsPsych({
+    show_progress_bar: false,
+        on_finish: function(){
+            // Save the total duration of the experiment in seconds
+            const totalDuration = jsPsych.getTotalTime() / 60000; // Convert to minutes
+            jsPsych.data.addProperties({ totalDuration: totalDuration });
+            saveData(subject_id, jsPsych.data.get().csv()); //change to prolific_id, along with save_data_byTrial?
+            var doc = jsPsych.getDisplayElement();
+            doc.innerHTML += '<div> <p>Thanks for your participation!</p></div>';
+        }
+    });
+    
+  //creates a random id for subjects
+  subject_id = jsPsych.randomization.randomID(15);
+
+  // capture info from Prolific
+  var prolific_id = jsPsych.data.getURLVariable('PROLIFIC_PID');
+  var study_id = jsPsych.data.getURLVariable('STUDY_ID');
+  var session_id = jsPsych.data.getURLVariable('SESSION_ID');
+
+  //assigning the participant to one of the three experiments
+  var experiments=['experiment 1','experiment 2',  'experiment 3']
+  shuffle(experiments)
+//  var actual_experiment = experiments[0]
+  var actual_experiment = 'experiment 1'
+   
+  //filtering by phase
+  var training_trials = trials.filter(item =>{return item.experiment === actual_experiment && item.phase === 'training';});
+  var testing_trials =  trials.filter(item =>{return item.experiment === actual_experiment && item.phase === 'testing';});
+  
+  
+  // selects words
+  var words = ['sluck', 'zeck', 'teeb', 'stig', 'narp']
+
+  //shuffle the array of words
+  shuffle(words)
+    
+    // map the first word in the array to the meaning ALL, the second one to the meaning NONE 
+    var word_ALL = words[0]
+    var word_NONE = words[1]
+
+    //left-right of buttons
+
+    var buttons_order =  [word_NONE, word_ALL]
+    //console.log(buttons_order)
+    shuffle(buttons_order)
+    //console.log(buttons_order)
+
+
+    //replace all the instances of 'ALL' per the word you choose for word_ALL
+    replaceValuesForKeys(testing_trials, ['expected_answer'], 'ALL', word_ALL);
+    replaceValuesForKeys(training_trials, ['expected_answer'], 'ALL', word_ALL);
+
+    //replace all the instances of 'NONE' per the word you choose for word_NONE
+    replaceValuesForKeys(testing_trials, ['expected_answer'], 'NONE', word_NONE);
+    replaceValuesForKeys(training_trials, ['expected_answer'], 'NONE', word_NONE);
+
+    jsPsych.data.addProperties({
+      subject: subject_id,
+      prolific_id: prolific_id,
+      word_ALL: word_ALL, 
+      word_NONE: word_NONE, 
+      orden_buttons: buttons_order
+    });
+
+
+    /* create timeline */
+    var timeline = [];
+
+    // consent form
+      const check_consent = function(elem) {
+      if (document.getElementById('consent_checkbox').checked) {
+          return true;
+      }
+      else {
+          alert("If you want to be part of this study, you have to agree.");
+          return false;
+      }
+      return false;
+    };
+
+
+   const consent = {
+              type: jsPsychExternalHtml,
+              url: "consent.html",
+              cont_btn: "start",
+              check_fn: check_consent,
+            };
+
+
+   timeline.push(consent)
+
+
+    var instructions_1 = {
+      type: jsPsychHtmlButtonResponse,
+      stimulus: function(){
+        var html = `<h2> Welcome! </h2>     <p style="text-align: left"> You will learn the meaning of two novel words: <i>${word_ALL}</i> and <i>${word_NONE}</i>. These words serve to describe the color of shapes. <br> <br> We will start by showing you a sentence using one of these words together with two pictures. Your task is to choose between the two pictures the one that correctly describes the sentence. <br><br>  At the beginning, you might not know what the correct answer is, but you will receive feedback on your answers and you will be able to improve. </p>
+        `;
+        return html;
+      },
+      choices: ['Start']
+    };
+    timeline.push(instructions_1);
+
+
+var train_phase = {
+      timeline:[
+      {
+      type: jsPsychHtmlKeyboardResponse,
+      stimulus: '<div style="font-size:60px;">+</div>',
+      choices: "NO_KEYS",
+      trial_duration: 250
+      },
+      {
+        type: jsPsychHtmlButtonResponse,
+        stimulus: function(){
+            var html = `<p> ${jsPsych.timelineVariable('sentence')}  <b>${jsPsych.timelineVariable('expected_answer')}.</b></p>`;
+            return html},
+        choices: function() {return jsPsych.randomization.shuffle(['img/'+jsPsych.timelineVariable('target_picture')+'.png', 'img/'+jsPsych.timelineVariable('foil_picture')+'.png']);},
+        button_html: '<button class="jspsych-btn"><img src="%choice%" style="width:200px; height:200px"/></button>',
+        post_trial_grap: 300, 
+        prompt : '  <p class="invisible-paragraph">feedback</p>',
+        save_trial_parameters: {
+            // save the randomly-selected button order 
+            choices: true,
+            // don't save the stimulus
+            stimulus: false
+          },
+          data:{
+            experiment: jsPsych.timelineVariable("experiment"),
+            phase: jsPsych.timelineVariable("phase"),
+            sentence: jsPsych.timelineVariable("sentence"),
+            target_picture: jsPsych.timelineVariable("target_picture"),
+            foil_picture: jsPsych.timelineVariable("foil_picture"),
+            type: jsPsych.timelineVariable("trial_type"),          
+            meaning: jsPsych.timelineVariable("meaning"),
+            expected_answer: jsPsych.timelineVariable("expected_answer")
+          },
+         on_finish: function(data){
+            data.img_response = data.choices[data.response]
+            // Score the keyboard response as correct or incorrect.
+             if(data.img_response == 'img/'+jsPsych.timelineVariable('target_picture')+'.png'){
+                data.correct = true;
+                data.feedback = '<p style=\"color:green\">Correct!</p>';
+                data.correct_choice=data.response;
+
+            } else {
+                data.correct = false; 
+                data.feedback = '<p style=\"color:red\">Incorrect!</p>';
+                data.correct_choice=(data.response == 0) ? 1 : 0;
+            }
+            //console.log(data.correct)
+  }}, 
+    {type: jsPsychHtmlButtonResponse,
+     stimulus: function(){
+            var html = `<p> ${jsPsych.timelineVariable('sentence')}  <b>${jsPsych.timelineVariable('expected_answer')}</b>.</p>`;
+            return html},
+
+      choices: function () {const choices = jsPsych.data.getLastTrialData().values()[0].choices; return choices},
+      prompt: function () {const feedback = jsPsych.data.getLastTrialData().values()[0].feedback; return feedback},
+      button_html: function(){
+        const correct_choice = jsPsych.data.getLastTrialData().values()[0].correct_choice; 
+        //console.log(correct_choice)
+        var buttons;
+        if(correct_choice==0 ){
+         buttons = ['<button class="style_correct" disabled="true"><img src="%choice%" style="width:200px; height:200px"/></button>', '<button class="style_incorrect" disabled="true"><img src="%choice%" style="width:200px; height:200px"/></button>']
+        }
+        else{ buttons = ['<button class="style_incorrect" disabled="true"><img src="%choice%" style="width:200px; height:200px"/></button>', '<button class="style_correct" disabled="true"><img src="%choice%" style="width:200px; height:200px"/></button>']
+        }
+        return buttons}, // Disable the buttons
+      trial_duration: 3000, 
+      post_trial_gap: 500,
+      save_trial_parameters: {
+            // don't save the stimulus
+            stimulus: false
+          }},
+          ],  
+      timeline_variables:training_trials,
+      randomize_order: true} ;
+    timeline.push(train_phase);
+
+
+    var instructions_2 = {
+      type: jsPsychHtmlButtonResponse,
+      stimulus: function(){
+        var html = ` <p style="text-align: left"> Now, you will be tested on what you have learned. You will see a picture along with a sentence describing it. Your task is to complete the sentence by choosing between the two new words</p>
+        `;
+        return html;
+      },
+      choices: ['Continue']
+    };
+    timeline.push(instructions_2);
+
+
+    var test_phase = {
+      timeline:[
+      {
+      type: jsPsychHtmlKeyboardResponse,
+      stimulus: '<div style="font-size:60px;">+</div>',
+      choices: "NO_KEYS",
+      trial_duration: 250
+      },
+
+      {
+      type: jsPsychHtmlButtonResponse,
+      stimulus: function(){
+        var html = `
+            <img style="width:200px; height:200px; border:1px solid black; border-radius: 15px;" src="img/${jsPsych.timelineVariable('target_picture')}.png">
+            <p> ${jsPsych.timelineVariable('sentence')}  _______ .</p>`;
+        return html;
+      },
+      prompt : '',
+      choices: buttons_order, 
+      save_trial_parameters: {
+            // don't save the stimulus
+            stimulus: false
+          },
+
+      //here we save informtion about the trial
+      data:{
+            experiment: jsPsych.timelineVariable("experiment"),
+            phase: jsPsych.timelineVariable("phase"),
+            sentence: jsPsych.timelineVariable("sentence"),
+            picture: jsPsych.timelineVariable("target_picture"),
+            type: jsPsych.timelineVariable("trial_type"),          
+            meaning: jsPsych.timelineVariable("meaning"),
+            expected_answer: jsPsych.timelineVariable("expected_answer")
+          },
+      
+      //here we save the informaiton about the responses
+      on_finish(data){
+      var response = data.response; //this is a 0 or a 1
+      var actual_response = (response==0) ? buttons_order[0] : buttons_order[1]; //this is the actual, artificial word
+      var coded_response = actual_response==word_NONE ? 'NONE' : 'ALL'; //this is whether the word is coded as NONE or ALL 
+
+      data.actual_response = actual_response;
+      data.coded_response = coded_response;
+
+      //non_extrapolation
+      if(jsPsych.timelineVariable('trial_type') =='not_extrapolation') {
+        data.correct = (actual_response==jsPsych.timelineVariable('expected_answer')) ? true : false
+        data.meaning_chosen = (coded_response=='ALL') ? 'all' : 'none'
+      }
+      //extrapolation
+      else if(jsPsych.timelineVariable('trial_type') =='extrapolation'){
+        data.correct = 'NA',
+        data.meaning_chosen = (coded_response=='ALL') ? 'some' : 'nall'
+        data.pref_some = (coded_response=='ALL') ? 1 : 0
+      }
+      }
+      }],
+      timeline_variables:testing_trials,
+      randomize_order: true} ;
+      timeline.push(test_phase);
+
+    var demographics= {
+        type: jsPsychSurveyText,
+        preamble: '<div> You have completed the experiment. ' +
+            'We will now ask you a series of simple questions. After you submit you will be automatically redirected to the Prolific app.</div>',
+        questions: [
+            {prompt: 'What is your native language?', value: '', columns: 80, placeholder: '', required:true},
+            {prompt: 'Do you speak other languages as well? If yes, which ones?', value: '', columns: 80, placeholder: '', required:true},
+            {prompt: 'What do you think is the meaning of <i>'+word_ALL+'</i>?', value: '', rows: 5, columns: 80, placeholder: '', required:true},
+            {prompt: 'What do you think is the meaning of <i>'+word_NONE+'</i>?', value: '', rows: 5, columns: 80, placeholder: '', required:true},
+            {prompt: 'What was your strategy to complete the experiment?', value: '', rows: 5, columns: 80, placeholder: '', required:true},
+            {prompt: 'Do you have difficulties distinguishing colors?', value: '', columns: 80, placeholder: '', required:true},
+        ],
+    };
+
+    timeline.push(demographics);
+
+
+
+    /* start the experiment */
+    jsPsych.run(timeline);
+
+  </script>
+</html>

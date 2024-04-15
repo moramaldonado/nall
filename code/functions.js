@@ -37,3 +37,11 @@ function repeatEntries(array, repeatCount) {
 
   return result;
 }
+
+function customButton(choice, index) {
+  console.log(index)
+    console.log(choice)
+
+  var classes = index === 0 ? 'style_correct' : 'style_incorrect'; // Assign classes based on choice index
+  return '<button class="'+ classes + '" disabled="true"><img src="'+choice+'" style="width:200px; height:200px"/></button>';
+}
